@@ -16,7 +16,7 @@ The PHNEGF are the scripts interfaced with ALAMODE software to investigate the b
 * kappa.py is a script to calculate phonon thermal ocnductance from transmission function data.
 
 # Download
-You can download the latest versions at https://github.com/TnakaTnakaTnaka/NEGF_ALAMDE. If you download the github version, please use the 'master' branch.
+You can download the latest versions at https://github.com/TnakaTnakaTnaka/PHNEGF. If you download the github version, please use the 'master' branch.
 
 ```
 $ git clone http://github.com/TnakaTnakaTnaka/PHNEGF.git
