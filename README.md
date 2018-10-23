@@ -19,4 +19,3 @@ http://alamode.readthedocs.io/
 
 # Author
 Yuto Tanaka 
-# PHNEGF

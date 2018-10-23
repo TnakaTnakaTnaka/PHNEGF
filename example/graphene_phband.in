@@ -1,0 +1,25 @@
+&general
+  PREFIX = graphene
+  MODE = phonons
+  FCSXML =graphene_cubic.xml
+
+  NKD = 1; KD = C
+  MASS = 12.0107
+/
+
+&cell
+  4.63666981 # factor in Bohr unit
+  0.86602540378 0.5 0.0 # a2
+  0.0 1.0 0.0 # a1
+  0.0 0.0 10.0 # a3
+/
+
+&kpoint
+  1  # KPMODE = 1: line mode
+  G  0.00000 0.00000 0.00000  M  0.50000 0.00000 0.00000  51
+  M  0.50000 0.00000 0.00000  K  0.66667 0.33333 0.00000  51
+  K  0.66667 0.33333 0.00000  G  0.00000 0.00000 0.00000  51
+/
+
+
+
