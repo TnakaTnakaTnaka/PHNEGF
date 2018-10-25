@@ -99,7 +99,7 @@ def generate_qmesh(kpoint, tran_direct):
         dq = 1 / (kpoint[i] + 1)
         qx = -0.5 + dq
 
-        while qx < 0.5 - 1e-3:
+        while qx < 0.5 - 1e-6:
             bz[i].append(qx)
             qx += dq
 
@@ -142,13 +142,13 @@ def main():
 
     # read negf file
     x_bohr, k_atom, nat, mass, lavec, univec, revec, tran_direct, \
-            kpoint, cutoff, delta, freq_max, criterion, step \
-            = dymat.read_negf(negf_file)
+        kpoint, cutoff, delta, freq_max, criterion, step \
+        = dymat.read_negf(negf_file)
 
     # atoms in unitcell  atom_uc = [1, ..., nat_unitcell]
     atom_uc = dymat.atom_in_unitcell(x_bohr, univec, nat)
     nat_uc = len(atom_uc)  # number of atoms in unit cell
-    
+
     # supercell infomation
     lmn = dymat.supercell(lavec, univec)
 
@@ -165,13 +165,14 @@ def main():
     mass_uc = dymat.mass_in_unitcell(mass, k_atom, atom_uc)
 
     # store fcs matrix
-    fcs = dymat.store_all_fcs(hessian_file, atom_uc, nat_uc, pairs, map_uc, mass_uc, tran_direct)
+    fcs = dymat.store_all_fcs(hessian_file, atom_uc,
+                              nat_uc, pairs, map_uc, mass_uc)
 
     # obtain k-point in 1st BZ and transport direction index
     qmesh, var_idx = generate_qmesh(kpoint, tran_direct)
 
     q_count = 0
-    cm = 3634.87331806918 # convert to cm^{-1}
+    cm = 3634.87331806918  # convert to cm^{-1}
     freq_max /= cm
     grid = float(freq_max) / step
 
@@ -185,11 +186,11 @@ def main():
             q = get_qpoint(qmesh[q_count], revec)
             q_count += 1
 
-            #Dynamical matrix
-            D_c, D_s, D_cl, D_cr = dymat.generate_dynamical_matrix( \
-                    fcs, q, nat_uc, univec, tran_direct)
+            # Dynamical matrix
+            D_c, D_s, D_cl, D_cr = dymat.generate_dynamical_matrix(
+                fcs, q, nat_uc, univec, tran_direct)
 
-            #for loop frequency
+            # for loop frequency
             for s in range(step):
                 omega, Tran = transmission(s, nat_uc, D_c, D_s, D_cl, D_cr)
                 tran_data[s][0] = omega
@@ -198,6 +199,7 @@ def main():
                 np.savetxt(outfile, tran_data, delimiter='  ')
 
     print(time.time() - start, "seconds")
+
 
 if __name__ == "__main__":
     main()

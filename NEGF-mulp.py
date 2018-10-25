@@ -16,13 +16,11 @@ $ python NEGF-mulp.py --negf=(prefix)_negf.in --hessian=(prefix).hessian
 
 import argparse
 import time
-import sys
-import math
+import multiprocessing as mp
+from multiprocessing import Pool
 import numpy as np
 import numpy.linalg as LA
 import mod_dymat as dymat
-import multiprocessing as mp
-from multiprocessing import Pool
 
 usage = "usage: %prog [options]"
 parser = argparse.ArgumentParser(usage=usage)
@@ -35,9 +33,9 @@ def surface_green(nat, OMG_s, D_s):
     N_atom = 3 * nat
 
     ep_s = OMG_s - (D_s[:N_atom, :N_atom])
-    ep   = OMG_s - (D_s[:N_atom, :N_atom])
-    alpha = (D_s[:N_atom,   N_atom:])
-    beta  = (D_s[ N_atom:, :N_atom ])
+    ep = OMG_s - (D_s[:N_atom, :N_atom])
+    alpha = (D_s[:N_atom, N_atom:])
+    beta = (D_s[N_atom:, :N_atom])
     G_0 = LA.inv(ep_s)
     norm_G = 1.0
     while norm_G > criterion:
@@ -45,12 +43,12 @@ def surface_green(nat, OMG_s, D_s):
         a = np.dot(ep_inv, alpha)
         b = np.dot(ep_inv, beta)
         ep_s -= np.dot(alpha, b)
-        ep   -= np.dot(beta, a) + np.dot(alpha, b)
+        ep -= np.dot(beta, a) + np.dot(alpha, b)
         alpha = np.dot(alpha, a)
-        beta  = np.dot(beta, b)
+        beta = np.dot(beta, b)
 
         G = LA.inv(ep_s)
-        norm_G = LA.norm(G-G_0)
+        norm_G = LA.norm(G - G_0)
         G_0 = G
 
     return G
@@ -82,7 +80,7 @@ def transmission(i, nat):
     G_c = LA.inv(OMG_c - D_c - (Self_l + Self_r))
     G_c_her = np.conjugate(G_c.T)
 
-    # Gamma
+    # Gamma (spectral density)
     Gamma_l = (Self_l - np.conjugate(Self_l.T)) * 1j
     Gamma_r = (Self_r - np.conjugate(Self_r.T)) * 1j
 
@@ -96,7 +94,6 @@ def generate_qmesh(kpoint, tran_direct):
 
     var_idx = [i for i, x in enumerate(tran_direct) if x == 0]
     fix_idx = [i for i, x in enumerate(tran_direct) if x == 1][0]
-    # fix_idx = tran_direct.index(1)
     bz = [[], [], []]
     bz[fix_idx].append(0.0)
 
@@ -154,7 +151,8 @@ def main():
     prefix = negf_file.split('.')[0]
 
     # read negf file
-    x_bohr, k_atom, nat, mass, lavec, univec, revec, tran_direct, kpoint, cutoff, delta, freq_max, criterion, step = dymat.read_negf(negf_file)
+    x_bohr, k_atom, nat, mass, lavec, univec, revec, tran_direct, kpoint, cutoff, delta, freq_max, criterion, step = dymat.read_negf(
+        negf_file)
 
     # supercell infomation
     lmn = dymat.supercell(lavec, univec)
@@ -176,19 +174,17 @@ def main():
     mass_uc = dymat.mass_in_unitcell(mass, k_atom, atom_uc)
 
     # store fcs matrix
-    fcs = dymat.store_all_fcs(hessian_file, atom_uc, nat_uc, pairs, map_uc, mass_uc, tran_direct)
+    fcs = dymat.store_all_fcs(hessian_file, atom_uc,
+                              nat_uc, pairs, map_uc, mass_uc)
 
     # obtain k-point in 1st BZ and transport direction index
     qmesh, var_idx = generate_qmesh(kpoint, tran_direct)
 
     q_count = 0
-    cm = 3634.87331806918 # convert to cm^{-1}
+    cm = 3634.87331806918  # convert to cm^{-1}
     freq_max /= cm
     grid = float(freq_max) / step
     wrap = [[s, nat_uc] for s in range(step)]
-    # revec_prim = np.zeros([3,3])
-    # for i in range(3):
-    #     revec_prim[i] = lmn[i] * revec[i]
 
     for i in range(kpoint[var_idx[0]]):
         for j in range(kpoint[var_idx[1]]):
@@ -200,8 +196,9 @@ def main():
             q = get_qpoint(qmesh[q_count], revec)
             q_count += 1
 
-            #Dynamical matrix
-            D_c, D_s, D_cl, D_cr = dymat.generate_dynamical_matrix(fcs, q, nat_uc, univec, tran_direct)
+            # Dynamical matrix
+            D_c, D_s, D_cl, D_cr = dymat.generate_dynamical_matrix(
+                fcs, q, nat_uc, univec, tran_direct)
 
             p = Pool(mp.cpu_count())
             # p = Pool(2)
@@ -209,11 +206,10 @@ def main():
             p.close()
             # p.terminate()
             tran_data = np.array(Tran)
-            np.savetxt(outfile, tran_data, delimiter = '  ')
+            np.savetxt(outfile, tran_data, delimiter='  ')
 
     print(time.time() - start, "seconds")
 
 
 if __name__ == "__main__":
     main()
-
