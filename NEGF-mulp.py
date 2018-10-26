@@ -11,6 +11,8 @@
 --- How to use ---
 $ python NEGF-mulp.py --negf=(prefix)_negf.in --hessian=(prefix).hessian (--nt=1)
 
+You can skip the --nt option, which is specify the number of thread.
+The default value is the thread limit on you environment.
 """
 
 
@@ -163,8 +165,8 @@ def main():
     prefix = negf_file.split('.')[0]
 
     # read negf file
-    x_bohr, k_atom, nat, mass, lavec, univec, revec, tran_direct, kpoint, cutoff, delta, freq_max, criterion, step = dymat.read_negf(
-        negf_file)
+    x_bohr, k_atom, nat, mass, lavec, univec, revec, tran_direct, kpoint, \
+        cutoff, delta, freq_max, criterion, step = dymat.read_negf(negf_file)
 
     # supercell infomation
     lmn = dymat.supercell(lavec, univec)
