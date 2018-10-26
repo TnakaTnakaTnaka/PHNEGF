@@ -9,7 +9,7 @@
 
 """
 --- How to use ---
-$ python NEGF-mulp.py --negf=(prefix)_negf.in --hessian=(prefix).hessian
+$ python NEGF-mulp.py --negf=(prefix)_negf.in --hessian=(prefix).hessian (--nt=1)
 
 """
 
@@ -26,6 +26,10 @@ usage = "usage: %prog [options]"
 parser = argparse.ArgumentParser(usage=usage)
 parser.add_argument("--negf", help="negf file")
 parser.add_argument("--hessian", help="hessian file")
+parser.add_argument("--nt", help="hessian file",
+                    type=int, default=mp.cpu_count())
+
+cm = 3634.87331806918  # convert to cm^{-1}
 
 
 def surface_green(nat, OMG_s, D_s):
@@ -101,7 +105,8 @@ def generate_qmesh(kpoint, tran_direct):
         dq = 1 / (kpoint[i] + 1)
         qx = -0.5 + dq
 
-        while qx < 0.5 - 1e-6:
+        xx = 0.5 - dq * 0.01
+        while qx < xx:
             bz[i].append(qx)
             qx += dq
 
@@ -126,7 +131,6 @@ def wrapper_transmission(args):
 def main():
 
     # grobalization
-    global cm
     global delta
     global criterion
     global grid
@@ -147,6 +151,14 @@ def main():
         hessian_file = options.hessian
     else:
         print("hessian file is not selected.")
+
+    if options.nt:
+        num_thread = options.nt
+        print("The number of thread : " + str(num_thread))
+        if num_thread > mp.cpu_count():
+            print("The number of thread specified by you is larger \
+                 than the thread limit on your environment.")
+            exit(1)
 
     prefix = negf_file.split('.')[0]
 
@@ -181,7 +193,6 @@ def main():
     qmesh, var_idx = generate_qmesh(kpoint, tran_direct)
 
     q_count = 0
-    cm = 3634.87331806918  # convert to cm^{-1}
     freq_max /= cm
     grid = float(freq_max) / step
     wrap = [[s, nat_uc] for s in range(step)]
@@ -200,11 +211,9 @@ def main():
             D_c, D_s, D_cl, D_cr = dymat.generate_dynamical_matrix(
                 fcs, q, nat_uc, univec, tran_direct)
 
-            p = Pool(mp.cpu_count())
-            # p = Pool(2)
+            p = Pool(num_thread)
             Tran = p.map(wrapper_transmission, wrap)
             p.close()
-            # p.terminate()
             tran_data = np.array(Tran)
             np.savetxt(outfile, tran_data, delimiter='  ')
 
