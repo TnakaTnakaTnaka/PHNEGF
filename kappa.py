@@ -24,7 +24,7 @@ import numpy as np
 
 usage = "usage: %prog [options]"
 parser = argparse.ArgumentParser(usage=usage)
-parser.add_argument("--tran", help="tran file")
+parser.add_argument("tran", help="tran file")
 parser.add_argument("--Tmin", action="store", default="0", \
         help="print the minimum temperature you want to calculate.")
 parser.add_argument("--Tmax", action="store", default="1000", \
