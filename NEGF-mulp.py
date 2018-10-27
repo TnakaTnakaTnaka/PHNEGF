@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# NEGF.py is a sclipt to obtain the phonon transmission function
+# NEGF-mulp.py is a sclipt to obtain the phonon transmission function
 # for each k-point by using the hessian file in ALAMODE.
 #
 #
@@ -133,13 +133,8 @@ def wrapper_transmission(args):
 def main():
 
     # grobalization
-    global delta
-    global criterion
-    global grid
-    global D_c
-    global D_s
-    global D_cl
-    global D_cr
+    global delta, criterion, grid
+    global D_c, D_s, D_cl, D_cr
 
     start = time.time()
 
