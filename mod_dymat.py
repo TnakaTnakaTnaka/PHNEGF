@@ -8,11 +8,11 @@
 # Copyright (c) 2018 Yuto Tanaka
 #
 
-import sys
 import math
+import cmath
 import numpy as np
 import numpy.linalg as LA
-import cmath
+
 
 def reciprocal(lavec):
 
@@ -65,9 +65,9 @@ def validation(tran_direct, kpoint):
 
 def read_negf(negf_file):
 
-    target = ['nat', 'nkd', 'mass', '&cell', '&unit_cell', \
+    target = ['nat', 'nkd', 'mass', '&cell', '&unit_cell',
               '&direction', '&kpoint', '&position', '&cutoff']
-    negf_target = ['imag_delta', 'freq_max', 'criterion', 'step']
+    negf_target = ['imag_delta', 'freq_max', 'criterion', 'freq_div']
     lavec_frag = 0
     univec_frag = 0
     pos_frag = 0
@@ -79,33 +79,35 @@ def read_negf(negf_file):
     univec = np.zeros([3, 3])  # unit vector (initialize)
 
     # default NEGF parameters
-    imag_delta = 1e-5
-    criterion = 1e-5
+    imag_delta = 1e-6
+    criterion = 1e-6
     freq_max = 1000
     step = 100
 
     f_negf = open(negf_file, 'r')  # open output file
     for line in f_negf:
         ss = line.strip().split()
-        if len(ss) == 0: # empty line
+        if len(ss) == 0:  # empty line
             continue
 
         else:
             # supercell lattice vector
             if lavec_frag == 1:
-                factor, lavec, vec_count = store_vec(factor, lavec, vec_count, ss)
+                factor, lavec, vec_count = store_vec(
+                    factor, lavec, vec_count, ss)
 
                 if vec_count == 3:
                     lavec_frag = 0
-                    conv = LA.inv(LA.inv(lavec).T) # unit converter
+                    conv = LA.inv(LA.inv(lavec).T)  # unit converter
 
             # unit cell vector and reciprocal vector
             elif univec_frag == 1:
-                factor, univec, vec_count = store_vec(factor, univec, vec_count, ss)
+                factor, univec, vec_count = store_vec(
+                    factor, univec, vec_count, ss)
 
                 if vec_count == 3:
                     univec_frag = 0
-                    revec = reciprocal(univec) # reciprocal vector
+                    revec = reciprocal(univec)  # reciprocal vector
 
             # transport direction
             elif direct_frag == 1:
@@ -117,7 +119,8 @@ def read_negf(negf_file):
                 if kp_mode < 0:
                     kp_mode = int(ss[0])
                     if kp_mode != 3:
-                        print('If you calculate dynamical matrix, KPMODE should be 3.')
+                        print(
+                            'If you calculate dynamical matrix, KPMODE should be 3.')
                         exit(1)
 
                 else:
@@ -140,18 +143,19 @@ def read_negf(negf_file):
 
             # search target and build frag
             if ss[0].lower() == target[0]:
-                nat = int(ss[2]) # number of atom
+                nat = int(ss[2])  # number of atom
                 atom_count = 0
-                k_atom = np.zeros([nat], dtype=np.int64) # kind of atom (initialize)
-                x_bohr = np.zeros([nat, 3]) # atomic coordinate (initialize)
+                # kind of atom (initialize)
+                k_atom = np.zeros([nat], dtype=np.int64)
+                x_bohr = np.zeros([nat, 3])  # atomic coordinate (initialize)
 
             elif ss[0].lower() == target[1]:
-                nkd = int(ss[2]) # number of kind of atom
-                mass = np.zeros([nkd]) # atomic mass (initialize)
+                nkd = int(ss[2])  # number of kind of atom
+                mass = np.zeros([nkd])  # atomic mass (initialize)
 
             elif ss[0].lower() == target[2]:
                 for i in range(nkd):
-                    mass[i] = ss[i+2] # atomic mass
+                    mass[i] = ss[i+2]  # atomic mass
 
             elif ss[0].lower() == target[3]:
                 factor = 0
@@ -191,7 +195,6 @@ def read_negf(negf_file):
             elif ss[0].lower() == negf_target[3]:
                 step = int(ss[2])
 
-
     f_negf.close()
 
     # convert coordinate unit frac to bohr
@@ -200,15 +203,15 @@ def read_negf(negf_file):
 
     # set cutoff radius
     if cutoff.lower() == 'none':
-        cutoff = 2.0 * univec[0][0]
+        cutoff = univec[0][0]
     else:
         cutoff = float(cutoff)
 
     validation(tran_direct, kpoint)
 
     return x_bohr, k_atom, nat, mass, lavec, univec, revec, \
-            tran_direct, kpoint, cutoff, imag_delta, freq_max, \
-            criterion, step
+        tran_direct, kpoint, cutoff, imag_delta, freq_max, \
+        criterion, step
 
 
 def supercell(lavec, univec):
@@ -219,7 +222,7 @@ def supercell(lavec, univec):
 
 def make_shift_list(lmn):
 
-    shift_max = [1, 1, 1]  #shift_max = [max_x, max_y, max_z]
+    shift_max = [1, 1, 1]  # shift_max = [max_x, max_y, max_z]
     for i in range(3):
         if lmn[i] > 3:
             shift_max[i] = int(lmn[i] * 0.5)
@@ -272,7 +275,8 @@ def check_symmetry(lavec, univec, x_bohr, p, q, cutoff):
         pass
 
     else:
-        index = [i for i, x in enumerate(distance) if abs(x - min(distance)) < 1e-5]
+        index = [i for i, x in enumerate(
+            distance) if abs(x - min(distance)) < 1e-5]
         Nshift = len(univec_shift)
         for i in index:
             shift = calc_shift(lavec_shift[i], lavec)
@@ -301,8 +305,15 @@ def generate_pairs(atom_uc, x_bohr, lavec, univec, nat, cutoff):
     f_log = open("pairs.log", "w")
     f_log.write("atom number in the unit cell\n")
     f_log.write(str(atom_uc) + "\n\n")
+
+    f_log.write("univec_shift R = l*a + m*b + n*c\n")
+    num_shift = len(univec_shift)
+    for i in range(num_shift):
+        f_log.write(str(i+1) + " " + str(univec_shift[i]) + "\n")
+    f_log.write("\n")
+
     for p in atom_uc:
-        f_log.write("symmetry pair of atom %d\n" %(p))
+        f_log.write("symmetry pair of atom %d\n" % (p))
         for q in range(len(pairs[p])):
             f_log.write(str(pairs[p][q]) + "\n")
         f_log.write("\n")
@@ -329,7 +340,7 @@ def mapping(x_bohr, univec, atom_uc, nat, lmn):
                     x_uni = x_bohr[x] - shift
                     if in_unitcell(x_uni, unit_len):
                         break_frag = 1
-                        break # break for loop k
+                        break  # break for loop k
 
                 # break for loop j
                 if break_frag == 1:
@@ -352,16 +363,15 @@ def mapping(x_bohr, univec, atom_uc, nat, lmn):
     return map_uc
 
 
-def store_all_fcs(hessian_file, atom_uc, nat_uc, pairs, map_uc, mass_uc, tran_direct):
+def store_all_fcs(hessian_file, atom_uc, nat_uc, pairs, map_uc, mass_uc):
 
-    fcs = np.zeros([len(xrng_u), len(yrng_u), len(zrng_u), 3*nat_uc, 3*nat_uc], dtype=np.complex128)
+    fcs = np.zeros([len(xrng_u), len(yrng_u), len(zrng_u),
+                    3*nat_uc, 3*nat_uc], dtype=np.complex128)
 
     num_uniq_pair = {i: len(pairs[i]) for i in pairs.keys()}
 
-    xyz = tran_direct.index(1) + 1      #x:1, y:2, z:3
-
     f_in = open(hessian_file, 'r')
-    label = f_in.readline()
+    label = f_in.readline()   # Do not comment out
     for line in f_in:
         ss = line.strip().split()
 
@@ -386,7 +396,8 @@ def store_all_fcs(hessian_file, atom_uc, nat_uc, pairs, map_uc, mass_uc, tran_di
                     break
 
             if pairs[atom1][p_idx][1] != []:
-                dev = len(pairs[atom1][p_idx][1]) * math.sqrt(mass_uc[idx1_uc] * mass_uc[idx2_uc])
+                dev = len(pairs[atom1][p_idx][1]) * \
+                    math.sqrt(mass_uc[idx1_uc] * mass_uc[idx2_uc])
                 fc2 /= dev
 
             else:
@@ -408,7 +419,7 @@ def generate_dynamical_matrix(fcs, q, nat, univec, tran_direct):
     N = 3 * nat
     dymat = np.zeros([3, N, N], dtype=np.complex128)
 
-    #initial values
+    # initial values
     D_c = np.zeros([3*N, 3*N], dtype=np.complex128)
     D_s = np.zeros([2*N, 2*N], dtype=np.complex128)
     D_cl = np.zeros([3*N, N], dtype=np.complex128)
@@ -459,4 +470,3 @@ def generate_dynamical_matrix(fcs, q, nat, univec, tran_direct):
     D_cr[2*N:, :] = dymat[1]
 
     return D_c, D_s, D_cl, D_cr
-

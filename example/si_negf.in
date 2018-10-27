@@ -39,7 +39,7 @@
 
 &kpoint
     3        # 3 : for dynamical matrix
-    1 20 20  # kx ky kz  kpoint for transport direction should be 1.
+    1 1 1  # kx ky kz  kpoint for transport direction should be 1.
 /
 
 
