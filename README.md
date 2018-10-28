@@ -11,7 +11,7 @@ The PHNEGF are the scripts interfaced with ALAMODE software to investigate the b
 
 * NEGF(-mulp).py is a script to calculate q-resolved phonon transmission function by using NEGF method. This script needs to be combined with mod_dymat.py.
 
-* tran.py is a script to calculate transmission function averaged in 1st Brillouin zone from the data obtained by NEGF.py.
+* tran.py is a script to calculate transmittance averaged in 1st Brillouin zone from the data obtained by NEGF.py.
 
 * kappa.py is a script to calculate phonon thermal ocnductance from transmission function data.
 
