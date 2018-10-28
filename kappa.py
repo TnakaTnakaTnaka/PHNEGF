@@ -2,7 +2,7 @@
 #
 # kappa.py
 #
-# script to calculate themal conductance by using tran.data
+# script to calculate thermal conductance from the result of transmittance
 #
 #
 # Copyright (c) 2018 Yuto Tanaka
@@ -25,22 +25,23 @@ import numpy as np
 usage = "usage: %prog [options]"
 parser = argparse.ArgumentParser(usage=usage)
 parser.add_argument("tran", help="tran file")
-parser.add_argument("--Tmin", action="store", default="0", \
-        help="print the minimum temperature you want to calculate.")
-parser.add_argument("--Tmax", action="store", default="1000", \
-        help="print the maximum temperature you want to calculate.")
-parser.add_argument("--dT", action="store", default="10", \
-        help="print the width of temperature. Default is 10 K")
+parser.add_argument("--Tmin", action="store", default="0",
+                    help="print the minimum temperature you want to calculate.")
+parser.add_argument("--Tmax", action="store", default="1000",
+                    help="print the maximum temperature you want to calculate.")
+parser.add_argument("--dT", action="store", default="10",
+                    help="print the width of temperature. Default is 10 K")
 
 
-"""parameters"""
+# parameters
 kb = 8.6173303e-5       # Boltzmann constant (ev/K)
 hbar = 6.582119514e-16  # Dirac constant (eV s)
 c = 2.99792458e+10      # speed of light (cm/s)
 eV = 1.60217662e-19     # (J / eV)
+delta = 1e-14           # parameter to avoid divergence in bose_function
 
 fac = 0.5 * eV * kb * c / math.pi
-delta = 1e-14
+
 
 def bose_function(x):
     return 1 / (np.exp(x + delta) - 1)
@@ -52,28 +53,27 @@ def exp_func(x):
     return gx
 
 
-def kappa(omega, tran, T):
+def calc_kappa(omega, tran, T):
     num_data = np.shape(omega)[0]
     beta = 1 / (kb * T)
     omega_bar = 2.0 * math.pi * beta * hbar * c * omega  # dimensionless
-    gx = exp_func(omega_bar) * tran
+    gx = exp_func(omega_bar) * tran  # Integrand
 
     domega = omega[1] - omega[0]
 
+    # Integration
     k_p = 0.5 * (gx[0] + gx[num_data-1])
     for i in range(1, num_data-2):
         k_p += gx[i]
 
-    k_p *= fac * domega * 2.0 * math.pi # unit : (W/K)
+    k_p *= fac * domega * 2.0 * math.pi  # unit : (W/K)
 
     return k_p
 
 
 def main():
-    global T_min
-    global T_max
-    global T_width
 
+    # Set args
     options = parser.parse_args()
     if options.tran:
         tran_file = options.tran
@@ -85,33 +85,35 @@ def main():
 
     if options.Tmin:
         T_min = float(options.Tmin)
-        print("The minimum tempreature : %3.1f K" %(T_min))
+        print("The minimum tempreature : %3.1f K" % (T_min))
     else:
         exit(1)
 
     if options.Tmax:
         T_max = float(options.Tmax)
-        print("The maximum tempreature : %3.1f K" %(T_max))
+        print("The maximum tempreature : %3.1f K" % (T_max))
     else:
         exit(1)
 
     if options.dT:
         T_width = float(options.dT)
-        print("The tempreature width   : %3.1f K" %(T_width))
+        print("The tempreature width   : %3.1f K" % (T_width))
     else:
         exit(1)
 
+    # Load and initialize
     step = int((T_max - T_min) / T_width) + 1
-    data = np.loadtxt(tran_file)
-    kappa_data = np.zeros([step, 2])
-    omega = data.T[0]
-    tran = data.T[1]
+    kappa_data = np.zeros([step, 2])  # Initialize thermal conductance data
+    data = np.loadtxt(tran_file)      # Load transmittance data file
+    omega = data.T[0]                 # Frequency
+    tran = data.T[1]                  # Transmittance
 
-    #loop for temperature
+    # Loop for temperature
     for i in range(step):
-        T = float(i * T_width + T_min)
+        T = float(i * T_width + T_min)  # Temperature (K)
         if T > 0:
-            kappa_p = kappa(omega, tran, T)
+            # calculate thermal conductance
+            kappa_p = calc_kappa(omega, tran, T)
 
         else:
             kappa_p = 0.0
@@ -119,8 +121,7 @@ def main():
         kappa_data[i][0] = T
         kappa_data[i][1] = kappa_p
 
-
-    #save kappa_phonon data
+    # save kappa_phonon data
     np.savetxt(kappa_file, kappa_data, delimiter='  ')
     print(kappa_file + " was generated.")
 
