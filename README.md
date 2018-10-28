@@ -9,11 +9,11 @@ The PHNEGF are the scripts interfaced with ALAMODE software to investigate the b
 
 * mod_dymat.py is a python module for generating dynamical matrix by using hessian file in ALAMODE. 
 
-* NEGF(-mulp).py is a script to calculate q-resolved phonon transmission function by using NEGF method. This script needs to be combined with mod_dymat.py.
+* NEGF(-mulp).py is a script to calculate q-resolved phonon transmittance by using NEGF method. This script needs to be combined with mod_dymat.py.
 
 * tran.py is a script to calculate transmittance averaged in 1st Brillouin zone from the data obtained by NEGF.py.
 
-* kappa.py is a script to calculate phonon thermal ocnductance from transmission function data.
+* kappa.py is a script to calculate phonon thermal ocnductance from transmittance data.
 
 # Download
 You can download the latest versions at https://github.com/TnakaTnakaTnaka/PHNEGF. If you download the github version, please use the 'master' branch.
