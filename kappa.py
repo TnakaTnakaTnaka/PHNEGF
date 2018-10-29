@@ -34,20 +34,18 @@ parser.add_argument("--dT", action="store", default="10",
 
 
 # parameters
-kb = 8.6173303e-5       # Boltzmann constant (ev/K)
-hbar = 6.582119514e-16  # Dirac constant (eV s)
-c = 2.99792458e+10      # speed of light (cm/s)
+kb = 8.6173303e-5       # Boltzmann constant (ev / K)
+hbar = 6.582119514e-16  # Dirac constant (eV * s)
+c = 2.99792458e+10      # speed of light (cm / s)
 eV = 1.60217662e-19     # (J / eV)
 delta = 1e-14           # parameter to avoid divergence in bose_function
-
-fac = 0.5 * eV * kb * c / math.pi
 
 
 def bose_function(x):
     return 1 / (np.exp(x + delta) - 1)
 
 
-def exp_func(x):
+def dist_func(x):
     gx = np.exp(x) * (x * bose_function(x)) ** 2
     gx[0] = 1.0
     return gx
@@ -57,16 +55,17 @@ def calc_kappa(omega, tran, T):
     num_data = np.shape(omega)[0]
     beta = 1 / (kb * T)
     omega_bar = 2.0 * math.pi * beta * hbar * c * omega  # dimensionless
-    gx = exp_func(omega_bar) * tran  # Integrand
+    gx = dist_func(omega_bar) * tran  # Integrand
 
     domega = omega[1] - omega[0]
 
-    # Integration
+    # Integration (Trapezoidal method)
     k_p = 0.5 * (gx[0] + gx[num_data-1])
     for i in range(1, num_data-2):
         k_p += gx[i]
 
-    k_p *= fac * domega * 2.0 * math.pi  # unit : (W/K)
+    fac = eV * kb * c * domega
+    k_p *= fac  # unit : (W/K)
 
     return k_p
 
@@ -86,20 +85,14 @@ def main():
     if options.Tmin:
         T_min = float(options.Tmin)
         print("The minimum tempreature : %3.1f K" % (T_min))
-    else:
-        exit(1)
 
     if options.Tmax:
         T_max = float(options.Tmax)
         print("The maximum tempreature : %3.1f K" % (T_max))
-    else:
-        exit(1)
 
     if options.dT:
         T_width = float(options.dT)
         print("The tempreature width   : %3.1f K" % (T_width))
-    else:
-        exit(1)
 
     # Load and initialize
     step = int((T_max - T_min) / T_width) + 1
