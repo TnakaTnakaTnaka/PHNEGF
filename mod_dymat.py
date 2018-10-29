@@ -213,8 +213,7 @@ def read_negf(negf_file):
         criterion, step
 
 
-def supercell(lavec, univec):
-    # [l, m, n] supercell
+def supercell(lavec, univec):  # [l, m, n] supercell
     lmn = [int(lavec[i][i] / univec[i][i]) for i in range(3)]
 
     return lmn
