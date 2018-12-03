@@ -15,7 +15,6 @@ import numpy.linalg as LA
 
 
 def reciprocal(lavec):
-
     revec = np.zeros([3, 3])
     vol = np.dot(lavec[0], (np.cross(lavec[1], lavec[2])))
 
@@ -29,7 +28,6 @@ def reciprocal(lavec):
 
 
 def store_vec(factor, vec, vec_count, ss):
-
     if factor == 0:
         factor = float(ss[0])
 
@@ -43,7 +41,6 @@ def store_vec(factor, vec, vec_count, ss):
 
 
 def validation(tran_direct, kpoint):
-
     val = True
 
     var_idx = [i for i, x in enumerate(tran_direct) if x == 0]
@@ -54,7 +51,8 @@ def validation(tran_direct, kpoint):
         val = False
 
     kp_wrong = [i for i, x in enumerate(kpoint) if x < 0]
-    if len(kp_wrong) > 0:
+    n = len(kp_wrong)
+    if n > 0:
         print("k point must be positive integer.")
         print("Please check kpoint field in negf input file.")
         val = False
@@ -64,7 +62,6 @@ def validation(tran_direct, kpoint):
 
 
 def read_negf(negf_file):
-
     target = ['nat', 'nkd', 'mass', '&cell', '&unit_cell',
               '&direction', '&kpoint', '&position', '&cutoff']
     negf_target = ['imag_delta', 'freq_max', 'criterion', 'freq_div']
@@ -87,7 +84,8 @@ def read_negf(negf_file):
     f_negf = open(negf_file, 'r')  # open output file
     for line in f_negf:
         ss = line.strip().split()
-        if len(ss) == 0:  # empty line
+        len_ss = len(ss)
+        if len_ss == 0:  # empty line
             continue
 
         else:
@@ -137,6 +135,7 @@ def read_negf(negf_file):
                 if atom_count == nat:
                     pos_frag = 0
 
+            # cutoff radius
             elif cutoff_frag == 1:
                 cutoff = ss[1]
                 cutoff_frag = 0
@@ -214,14 +213,13 @@ def read_negf(negf_file):
         criterion, step
 
 
-def supercell(lavec, univec):
+def supercell(lavec, univec):  # [l, m, n] supercell
     lmn = [int(lavec[i][i] / univec[i][i]) for i in range(3)]
 
     return lmn
 
 
 def make_shift_list(lmn):
-
     shift_max = [1, 1, 1]  # shift_max = [max_x, max_y, max_z]
     for i in range(3):
         if lmn[i] > 3:
@@ -259,31 +257,31 @@ def atom_in_unitcell(x_bohr, univec, nat):
     return atom_uc
 
 
-def check_symmetry(lavec, univec, x_bohr, p, q, cutoff):
-    shift = np.zeros([3])
+def calc_distance(x_bohr, lavec, p, q, num_shift):
     distance = []
-    symmetry = []
-    unit_len = np.sum(univec, axis=0)
-
-    Nshift = len(lavec_shift)
-    for i in range(Nshift):
+    for i in range(num_shift):
         shift = calc_shift(lavec_shift[i], lavec)
         dist = LA.norm(x_bohr[p-1] - (x_bohr[q-1] + shift))
         distance.append(dist)
 
-    if min(distance) > cutoff:
-        pass
+    return distance
 
-    else:
+
+def check_symmetry(lavec, univec, x_bohr, p, q, cutoff):
+    symmetry = []
+    unit_len = np.sum(univec, axis=0)
+
+    num_shift = len(lavec_shift)
+    distance = calc_distance(x_bohr, lavec, p, q, num_shift)
+
+    if min(distance) <= cutoff:
         index = [i for i, x in enumerate(
             distance) if abs(x - min(distance)) < 1e-5]
-        Nshift = len(univec_shift)
+        num_shift = len(univec_shift)
         for i in index:
-            shift = calc_shift(lavec_shift[i], lavec)
-            x_la = x_bohr[q-1] + shift
-            for j in range(Nshift):
-                shift = calc_shift(univec_shift[j], univec)
-                x_uni = x_la - shift
+            x_la = x_bohr[q-1] + calc_shift(lavec_shift[i], lavec)
+            for j in range(num_shift):
+                x_uni = x_la - calc_shift(univec_shift[j], univec)
 
                 if in_unitcell(x_uni, unit_len):
                     symmetry.append(j)
@@ -293,7 +291,6 @@ def check_symmetry(lavec, univec, x_bohr, p, q, cutoff):
 
 
 def generate_pairs(atom_uc, x_bohr, lavec, univec, nat, cutoff):
-
     pairs = {}
 
     for p in atom_uc:
@@ -332,22 +329,21 @@ def mapping(x_bohr, univec, atom_uc, nat, lmn):
     map_uc = []
     unit_len = np.sum(univec, axis=0)
     for x in range(nat):
-        break_frag = 0
+        break_frag = False
         for i in range(lmn[0]):
             for j in range(lmn[1]):
                 for k in range(lmn[2]):
-                    shift = calc_shift([i, j, k], univec)
-                    x_uni = x_bohr[x] - shift
+                    x_uni = x_bohr[x] - calc_shift([i, j, k], univec)
                     if in_unitcell(x_uni, unit_len):
-                        break_frag = 1
+                        break_frag = True
                         break  # break for loop k
 
                 # break for loop j
-                if break_frag == 1:
+                if break_frag:
                     break
 
-            # break for loop j
-            if break_frag == 1:
+            # break for loop i
+            if break_frag:
                 break
 
         for p in atom_uc:
@@ -358,13 +354,13 @@ def mapping(x_bohr, univec, atom_uc, nat, lmn):
 
         if len(map_uc) != x + 1:
             print("mapping atom error.")
+            print("Please check NAT, &cell, and &unit_cell fields in negf file.")
             exit(1)
 
     return map_uc
 
 
 def store_all_fcs(hessian_file, atom_uc, nat_uc, pairs, map_uc, mass_uc):
-
     fcs = np.zeros([len(xrng_u), len(yrng_u), len(zrng_u),
                     3*nat_uc, 3*nat_uc], dtype=np.complex128)
 
