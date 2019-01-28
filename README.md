@@ -23,7 +23,7 @@ $ git clone http://github.com/TnakaTnakaTnaka/PHNEGF.git
 ```
 
 # Documentation
-For more details about PHNEGF, please see the manual (manual.pdf).
+For more details about PHNEGF, see the manual (manual.pdf).
 
 # Reference
 ALAMODE software package
