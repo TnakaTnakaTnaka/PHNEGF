@@ -92,10 +92,15 @@ def main():
 
     if options.dT:
         T_width = float(options.dT)
+        if T_max == T_min:
+            T_width = 0
         print("The tempreature width   : %3.1f K" % (T_width))
 
     # Load and initialize
-    step = int((T_max - T_min) / T_width) + 1
+    if T_width != 0:
+        step = int((T_max - T_min) / T_width) + 1
+    else:
+        step = 1
     kappa_data = np.zeros([step, 2])  # Initialize thermal conductance data
     data = np.loadtxt(tran_file)      # Load transmittance data file
     omega = data.T[0]                 # Frequency
