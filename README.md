@@ -6,7 +6,7 @@ PHNEGF
 
 
 # Overview
-The PHNEGF are the scripts interfaced with ALAMODE software to investigate the ballistic phonon transport in the bulk system on the basis of Nonequilibrium Green’s function (NEGF) method. ALAMODE is a software package designed for analyzing lattice anharmonicity and lattice thermal conductivity of solids by using an external DFT package. By using PHNEGF, you can calculate the phonon transmittance and thermal conductance from the results of harmonic interatomic force constants (IFCs) in ALAMODE.
+PHNEGF is a script interfaced with ALAMODE software to investigate the ballistic phonon transport in the bulk system on the basis of Nonequilibrium Green’s function (NEGF) method. ALAMODE is a software package designed for analyzing lattice anharmonicity and lattice thermal conductivity of solids by using an external DFT package. By using PHNEGF, you can calculate the phonon transmittance and thermal conductance from the results of harmonic interatomic force constants (IFCs) in ALAMODE.
 
 
 * mod_dymat.py is a python module for generating dynamical matrix by using hessian file in ALAMODE. 
