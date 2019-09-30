@@ -85,10 +85,15 @@ def main():
     if options.Tmin:
         T_min = float(options.Tmin)
         print("The minimum tempreature : %3.1f K" % (T_min))
+        if T_min < 0:
+            print("Specified temperature is negative.")
+            exit(1)
 
     if options.Tmax:
         T_max = float(options.Tmax)
         print("The maximum tempreature : %3.1f K" % (T_max))
+        if T_min > T_max:
+            print("Tmin is larger than Tmax. Check arguments.")
 
     if options.dT:
         T_width = float(options.dT)
