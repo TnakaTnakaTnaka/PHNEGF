@@ -15,7 +15,7 @@ PHNEGF is a script interfaced with ALAMODE software to investigate the ballistic
 
 * tran.py is a script to calculate transmittance averaged in 1st Brillouin zone from the data obtained by NEGF.py.
 
-* kappa.py is a script to calculate phonon thermal ocnductance from transmittance data.
+* phtherm.py (kappa.py was renamed) is a script to calculate phonon thermal ocnductance from transmittance data.
 
 # Download
 You can download the latest versions at https://github.com/TnakaTnakaTnaka/PHNEGF. If you download the github version, please use the 'master' branch.
